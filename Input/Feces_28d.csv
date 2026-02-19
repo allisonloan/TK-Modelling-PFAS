@@ -1,0 +1,65 @@
+﻿Group,Mouse ID,Sex,Number of Fecal Pellet**,PFOA,PFOS,PFBA,PFPeA,PFHxA,PFHpA,PFNA,PFDA,PFUdA,PFDoA,PFTrDA,PFTeDA,HFPO-DA,DONA,PFBS,PFPeS,PFHxS,PFHpS,PFNS,PFDS,4_2-FTS,6_2_FTS,8_2-FTS
+Naive,MN01,Male,≤ 2,0.097729325,<MDL,0.229564846,<MDL,0.059076323,0.056818859,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL
+Naive,MN02,Male,0,,,,,,,,,,,,,,,,,,,,,,,
+Naive,MN03,Male,0,,,,,,,,,,,,,,,,,,,,,,,
+Naive,MN04,Male,0,,,,,,,,,,,,,,,,,,,,,,,
+Naive,MN05,Male,0,,,,,,,,,,,,,,,,,,,,,,,
+Naive,MN06,Male,≤ 1,0.939303492,<MDL,0.411510566,<MDL,0.071158154,0.101503403,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL
+Naive,MN07,Male,0,,,,,,,,,,,,,,,,,,,,,,,
+Naive,MN08,Male,0,,,,,,,,,,,,,,,,,,,,,,,
+Naive,FN09,Female,0,,,,,,,,,,,,,,,,,,,,,,,
+Naive,FN10,Female,0,,,,,,,,,,,,,,,,,,,,,,,
+Naive,FN11,Female,0,,,,,,,,,,,,,,,,,,,,,,,
+Naive,FN12,Female,0,,,,,,,,,,,,,,,,,,,,,,,
+Naive,FN13,Female,1,1.696077524,<MDL,1.54393195,<MDL,0.444333306,0.453683584,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL
+Naive,FN14,Female,1,0.095483793,<MDL,0.231227004,<MDL,0.022215833,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,0.128364883,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL
+Naive,FN15,Female,0,,,,,,,,,,,,,,,,,,,,,,,
+Naive,FN16,Female,0,,,,,,,,,,,,,,,,,,,,,,,
+Vehicle,MV17,Male,≤ 1,0.139287995,1.269373122,0.250442781,<MDL,0.069645494,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL
+Vehicle,MV18,Male,0,,,,,,,,,,,,,,,,,,,,,,,
+Vehicle,MV19,Male,0,,,,,,,,,,,,,,,,,,,,,,,
+Vehicle,MV20,Male,≤ 1,3.099268439,<MDL,0.381170125,<MDL,0.097510886,0.154383845,<MDL,0.313265745,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL
+Vehicle,MV21,Male,0,,,,,,,,,,,,,,,,,,,,,,,
+Vehicle,MV22,Male,0,,,,,,,,,,,,,,,,,,,,,,,
+Vehicle,MV23,Male,0,,,,,,,,,,,,,,,,,,,,,,,
+Vehicle,MV24,Male,0,,,,,,,,,,,,,,,,,,,,,,,
+Vehicle,FV25,Female,0,,,,,,,,,,,,,,,,,,,,,,,
+Vehicle,FV26,Female,0,,,,,,,,,,,,,,,,,,,,,,,
+Vehicle,FV27,Female,1,0.293398386,1.980405373,0.634192823,<MDL,0.16170688,0.153626816,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL
+Vehicle,FV28,Female,0,,,,,,,,,,,,,,,,,,,,,,,
+Vehicle,FV29,Female,0,,,,,,,,,,,,,,,,,,,,,,,
+Vehicle,FV30,Female,0,,,,,,,,,,,,,,,,,,,,,,,
+Vehicle,FV31,Female,≤ 1,<MDL,<MDL,0.336646655,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL
+Vehicle,FV32,Female,0,,,,,,,,,,,,,,,,,,,,,,,
+PFOS 1.5,MS33,Male,≤ 1,<MDL,3852.177645,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,51.62910362,69.81111984,<MDL,<MDL,<MDL,<MDL,<MDL
+PFOS 1.5,MS34,Male,0,,,,,,,,,,,,,,,,,,,,,,,
+PFOS 1.5,MS35,Male,≤ 1,<MDL,3288.679257,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,27.24293862,56.44447647,<MDL,<MDL,<MDL,<MDL,<MDL
+PFOS 1.5,MS36,Male,0,,,,,,,,,,,,,,,,,,,,,,,
+PFOS 1.5,MS37,Male,0,,,,,,,,,,,,,,,,,,,,,,,
+PFOS 1.5,MS38,Male,0,,,,,,,,,,,,,,,,,,,,,,,
+PFOS 1.5,MS39,Male,0,,,,,,,,,,,,,,,,,,,,,,,
+PFOS 1.5,MS40,Male,0,,,,,,,,,,,,,,,,,,,,,,,
+PFOS 1.5,FS41,Female,0,,,,,,,,,,,,,,,,,,,,,,,
+PFOS 1.5,FS42,Female,≤ 1,<MDL,3475.936801,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,27.72859356,56.76021735,<MDL,<MDL,<MDL,<MDL,<MDL
+PFOS 1.5,FS43,Female,0,,,,,,,,,,,,,,,,,,,,,,,
+PFOS 1.5,FS44,Female,0,,,,,,,,,,,,,,,,,,,,,,,
+PFOS 1.5,FS45,Female,≤ 1,<MDL,2293.417659,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,24.89455823,44.73533067,<MDL,<MDL,<MDL,<MDL,<MDL
+PFOS 1.5,FS46,Female,1,<MDL,4834.151476,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,35.03415362,85.91403943,<MDL,<MDL,<MDL,<MDL,<MDL
+PFOS 1.5,FS47,Female,≤ 1,<MDL,4170.379745,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,13.14379831,51.24017519,<MDL,<MDL,<MDL,<MDL,<MDL
+PFOA 1.5,FS48,Female,0,,,,,,,,,,,,,,,,,,,,,,,
+PFOA 1.5,MA49,Male,≤ 1,652.2969473,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,2.161334069,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL
+PFOA 1.5,MA50,Male,0,,,,,,,,,,,,,,,,,,,,,,,
+PFOA 1.5,MA51,Male,0,,,,,,,,,,,,,,,,,,,,,,,
+PFOA 1.5,MA52,Male,≤ 1,580.3852133,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,1.825070434,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL
+PFOA 1.5,MA53,Male,≤ 1,1113.86898,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,2.996783616,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL
+PFOA 1.5,MA54,Male,≤ 1,840.0253175,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,2.638238534,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL
+PFOA 1.5,MA55,Male,0,,,,,,,,,,,,,,,,,,,,,,,
+PFOA 1.5,MA56,Male,≤ 1,435.8079795,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,3.474958713,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL
+PFOA 1.5,FA57,Female,0,,,,,,,,,,,,,,,,,,,,,,,
+PFOA 1.5,FA58,Female,0,,,,,,,,,,,,,,,,,,,,,,,
+PFOA 1.5,FA59,Female,≤ 1,829.9164058,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,3.152933403,<MDL,0.927223119,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL
+PFOA 1.5,FA60,Female,0,,,,,,,,,,,,,,,,,,,,,,,
+PFOA 1.5,FA61,Female,0,,,,,,,,,,,,,,,,,,,,,,,
+PFOA 1.5,FA62,Female,≤ 2,537.3792358,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,2.618251979,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL
+PFOA 1.5,FA63,Female,≤ 2,1045.019096,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,2.04440551,<MDL,0.550014893,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL,<MDL
+PFOA 1.5,FA64,Female,0,,,,,,,,,,,,,,,,,,,,,,,
