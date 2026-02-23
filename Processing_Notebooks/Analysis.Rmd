@@ -14,6 +14,8 @@ library(tibble)
 library(showtext)
 library(extrafont)
 library(pracma)
+library(ggrepel)
+
 windowsFonts(Arial = windowsFont("Arial"))
 ```
 
@@ -153,7 +155,7 @@ p <- ggplot(data_combined_long, aes(x = group, y = PFAS_conc)) +
       panel.grid.minor = element_blank()
   )
 print(p)
-ggsave(filename = "../PBTK-Modelling-PFAS/plots/Feces_conc_28d.png", plot = p, width = 5, height = 5, dpi = 300,bg = "white")
+ggsave(filename = "../plots/Feces_conc_28d.png", plot = p, width = 5, height = 5, dpi = 300,bg = "white")
 
 replicate_summary <- feces_28 %>%
   group_by(Group) %>%  
@@ -278,7 +280,7 @@ p <- ggplot(data_combined_long, aes(x = group, y = PFAS_conc)) +
       panel.grid.minor = element_blank()
   )
 print(p)
-ggsave(filename = "../PBTK-Modelling-PFAS/plots/feces_56_conc.png", plot = p, width = 12.5, height = 5, dpi = 300,bg = "white")
+ggsave(filename = "../plots/feces_56_conc.png", plot = p, width = 12.5, height = 5, dpi = 300,bg = "white")
 
 replicate_summary <- feces_56%>%
   group_by(Group) %>%  
@@ -412,7 +414,7 @@ p <- ggplot(pfos, aes(x = PFOS_liver, y = PFOS_feces)) +
   )
 
 print(p)
-ggsave(filename = "../PBTK-Modelling-PFAS/plots/fecesxliver_pfos.png", plot = p, width = 7, height = 6, dpi = 300,bg = "white")
+ggsave(filename = "../plots/fecesxliver_pfos.png", plot = p, width = 7, height = 6, dpi = 300,bg = "white")
 
 p <- ggplot(pfoa, aes(x = PFOA_liver, y = PFOA_feces)) +
   # Single lm line
@@ -441,7 +443,7 @@ p <- ggplot(pfoa, aes(x = PFOA_liver, y = PFOA_feces)) +
     panel.grid.minor = element_blank()
   )
 print(p)
-ggsave(filename = "../PBTK-Modelling-PFAS/plots/fecesxliver_pfoa.png", plot = p, width = 7, height = 6, dpi = 300,bg = "white")
+ggsave(filename = "../plots/fecesxliver_pfoa.png", plot = p, width = 7, height = 6, dpi = 300,bg = "white")
 replicate_summary <- pfoa%>%
   group_by(Group, Time) %>%  
   summarise(n = n(), .groups = "drop")
@@ -537,7 +539,7 @@ p <- ggplot(pfos, aes(x = PFOS_plasma, y = PFOS_feces)) +
   )
 
 print(p)
-ggsave(filename = "../PBTK-Modelling-PFAS/plots/fecesxplasma_pfos.png", plot = p, width = 7, height = 6, dpi = 300,bg = "white")
+ggsave(filename = "../plots/fecesxplasma_pfos.png", plot = p, width = 7, height = 6, dpi = 300,bg = "white")
 
 p <- ggplot(pfoa, aes(x = PFOA_plasma, y = PFOA_feces)) +
   # Single lm line
@@ -566,7 +568,7 @@ p <- ggplot(pfoa, aes(x = PFOA_plasma, y = PFOA_feces)) +
     panel.grid.minor = element_blank()
   )
 print(p)
-ggsave(filename = "../PBTK-Modelling-PFAS/plots/fecesxplasma_pfoa.png", plot = p, width = 7, height = 6, dpi = 300,bg = "white")
+ggsave(filename = "../plots/fecesxplasma_pfoa.png", plot = p, width = 7, height = 6, dpi = 300,bg = "white")
 
 replicate_summary <- pfoa%>%
   group_by(Group, Time) %>%  
@@ -750,6 +752,10 @@ info_pfoa_mouse <- subset(
   DTXSID == "DTXSID8031865" & Species == "Mouse"
 )
 info_pfoa_mouse
+
+#account for cd1 to c57 conversion
+pfoa_clearance_m <- 0.001331 *1.5 * 0.1805
+pfoa_clearance_f <- 0.001851 *1.5 * 0.1805
 ```
 ##PFOS Plasma pfas1comp httk 2.7.2.
 ```{r}
@@ -819,7 +825,7 @@ pred_1comp_all <- map_df(dose_vec, function(dose) {
   )
   pars_m$Funbound.plasma <-0.00256 #mouse c57 file:///C:/Users/aloan/Downloads/toxics-12-00253.pdf
   pars_m$Vdist <- 0.263
-  pars_m$kelim <- 0.0007290
+  pars_m$kelim <- 0.0007290 
   pars_m$Rblood2plasma <- 0.588
   pars_m$Caco2.Pab <- 1.6
   
@@ -880,7 +886,7 @@ p <- ggplot() +
   theme(
     text = element_text(family = "Arial", size = 12),
     axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "bottom",
+    legend.position = "b",
     panel.grid.major = element_line(size = 0.5),
     panel.grid.minor = element_blank()
   )
@@ -967,7 +973,7 @@ pred_1comp_all <- map_df(dose_vec, function(dose) {
   )
   pars_f$Funbound.plasma <-  0.0142 #mouse c57 file:///C:/Users/aloan/Downloads/toxics-12-00253.pdf
   pars_f$Vdist <- 0.1805
-  pars_f$kelim <- 0.001851
+  pars_f$kelim <- 0.001851 * 1.5 #https://pmc.ncbi.nlm.nih.gov/articles/PMC4464984/
   pars_f$Rblood2plasma <- 0.9047 # from r2bp function
   pars_f$Caco2.Pab <- 1.6
 
@@ -991,14 +997,14 @@ pred_1comp_all <- map_df(dose_vec, function(dose) {
 
   # ---- Male model ----
   pars_m <- parameterize_pfas1comp(
-    chem.cas = "1763-23-1",
+    chem.cas = "335-67-1",
     species = "Mouse",
     dosingadj = "Oral",
     suppress.messages = TRUE
   )
   pars_m$Funbound.plasma <- 0.0142 #mouse c57 file:///C:/Users/aloan/Downloads/toxics-12-00253.pdf
   pars_m$Vdist <- 0.1805
-  pars_m$kelim <- 0.001331
+  pars_m$kelim <- 0.001331* 1.5 #https://pmc.ncbi.nlm.nih.gov/articles/PMC4464984/
   pars_m$Rblood2plasma <- 0.9047 # from r2bp function
   pars_m$Caco2.Pab <- 1.6
   pars <- rbind(pars_f, pars_m)
@@ -1058,7 +1064,7 @@ p <- ggplot() +
   theme(
     text = element_text(family = "Arial", size = 12),
     axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "bottom",
+    legend.position = "b",
     panel.grid.major = element_line(size = 0.5),
     panel.grid.minor = element_blank()
   )
@@ -1121,6 +1127,7 @@ pfos_obs <- pfas_obs_all %>%
 
 dose_vec <- unique(pfos_obs$Dose)
 time_vec <- unique(pfos_obs$Time)
+sim_days <- max(time_vec)
 tissues_all <- c("Plasma", "Liver", "Kidney", "Lung", "Gut", "Rest")
 
 # Function to map tissue names to PBTK model column names
@@ -1134,33 +1141,63 @@ tissue_to_col <- function(tissue) {
          Rest = "Crest")
 }
 
+# Base parameterization (run once)
+pars_base <- parameterize_pbtk(
+  chem.cas = "1763-23-1",
+  species = "Mouse",
+  dosingadj = "Oral",
+  class.exclude = FALSE,
+  suppress.messages = TRUE,
+  default.to.human = TRUE
+)
+
+# ---- Male parameters ----
+pars_m <- pars_base
+pars_m$Vdist <- 0.263
+pars_m$kelim <- 0.0007290
+pars_m$Funbound.plasma <- 0.00256
+pars_m$Rblood2plasma <- 0.588
+pars_m$Caco2.Pab <- 1.6
+pars_m$Clmetabolismc <- 0.0001917
+pars_m$Fabsgut <- 0.9798 #https://www.ncbi.nlm.nih.gov/books/NBK614278/
+pars_m$kgutabs <- 1.572
+
+
+# ---- Female parameters ----
+pars_f <- pars_base
+pars_f$Vdist <- 0.261
+pars_f$kelim <- 0.0008463
+pars_f$Funbound.plasma <- 0.00256
+pars_f$Rblood2plasma <- 0.588
+pars_f$Caco2.Pab <- 1.6
+pars_f$Clmetabolismc <- 0.0002209
+pars_f$Fabsgut <- 0.9798 #https://www.ncbi.nlm.nih.gov/books/NBK614278/
+pars_f$kgutabs <- 1.572
+
+
+pars_f_df <- data.frame(
+  Parameter = names(pars_f),
+  Female = unlist(pars_f)
+)
+
+pars_m_df <- data.frame(
+  Parameter = names(pars_m),
+  Male = unlist(pars_m)
+)
+
+pars <- full_join(pars_f_df, pars_m_df, by = "Parameter")
+
+# Write both parameter sets
+write.csv(pars, "C:/Users/aloan/OneDrive - HC-SC PHAC-ASPC/Documents/PBTK-Modelling-PFAS/Output/pars_pfos_pbtk.csv")
+
 
 # Run model and get predictions
 predictions <- map_df(dose_vec, function(dose) {
 
   map_df(c("Male", "Female"), function(sex) {
 
-    pars <- parameterize_pbtk(
-      chem.cas = "1763-23-1",
-      species = "Mouse",
-      dosingadj = "Oral",
-      class.exclude = FALSE,
-      suppress.messages = TRUE,
-      default.to.human = TRUE
-    )
+    pars <- if (sex == "Male") pars_m else pars_f
 
-    # ---- Sex-specific parameters ----
-    if (sex == "Male") {
-      pars$Vdist <- 0.263
-      pars$kelim <- 0.0007290
-    } else {
-      pars$Vdist <- 0.261
-      pars$kelim <- 0.0008463
-    }
-    pars$Funbound.plasma <- 0.00256
-    pars$Rblood2plasma <- 0.588
-    pars$Caco2.Pab <- 1.6
-write.csv(pars, "C:/Users/aloan/OneDrive - HC-SC PHAC-ASPC/Documents/PBTK-Modelling-PFAS/Output/pars_pfos_pbtk.csv")
     out <- solve_pbtk(
       chem.cas = "1763-23-1",
       days = max(time_vec),
@@ -1312,6 +1349,7 @@ pfoa_obs <- pfas_obs_all %>%
 
 dose_vec <- unique(pfoa_obs$Dose)
 time_vec <- unique(pfoa_obs$Time)
+sim_days <- max(time_vec)
 tissues_all <- c("Plasma", "Liver", "Kidney", "Lung", "Gut", "Rest")
 
 # Function to map tissue names to PBTK model column names
@@ -1324,33 +1362,60 @@ tissue_to_col <- function(tissue) {
          Gut = "Cgut",
          Rest = "Crest")
 }
+# Base parameterization (run once)
+pars_base <- parameterize_pbtk(
+  chem.cas = "335-67-1",
+  species = "Mouse",
+  dosingadj = "Oral",
+  class.exclude = FALSE,
+  suppress.messages = TRUE,
+  default.to.human = TRUE
+)
+
+# ---- Male parameters ----
+pars_m <- pars_base
+pars_m$Vdist <- 0.1805
+pars_m$kelim <- 0.001331 * 1.5 #https://pmc.ncbi.nlm.nih.gov/articles/PMC4464984/
+pars_m$Funbound.plasma <- 0.0142
+pars_m$Rblood2plasma <- 0.9047
+pars_m$Caco2.Pab <- 1.6
+pars_m$Clmetabolismc <- pfoa_clearance_m
+pars_m$Fabsgut <- 0.9798 #https://www.ncbi.nlm.nih.gov/books/NBK614278/
+pars_m$kgutabs <- 1.572
+  
+# ---- Female parameters ----
+pars_f <- pars_base
+pars_f$Vdist <- 0.1805
+pars_f$kelim <- 0.001851 * 1.5 #https://pmc.ncbi.nlm.nih.gov/articles/PMC4464984/
+pars_f$Funbound.plasma <- 0.0142
+pars_f$Rblood2plasma <- 0.9047
+pars_f$Caco2.Pab <- 1.6
+pars_f$Clmetabolismc <- pfoa_clearance_f
+pars_f$Fabsgut <- 0.9798 #https://www.ncbi.nlm.nih.gov/books/NBK614278/
+pars_f$kgutabs <- 1.572
+
+pars_f_df <- data.frame(
+  Parameter = names(pars_f),
+  Female = unlist(pars_f)
+)
+
+pars_m_df <- data.frame(
+  Parameter = names(pars_m),
+  Male = unlist(pars_m)
+)
+
+pars <- full_join(pars_f_df, pars_m_df, by = "Parameter")
+
+# Write both parameter sets
+write.csv(pars, "C:/Users/aloan/OneDrive - HC-SC PHAC-ASPC/Documents/PBTK-Modelling-PFAS/Output/pars_pfoa_pbtk.csv")
 
 # Run model and get predictions
 predictions <- map_df(dose_vec, function(dose) {
 
   map_df(c("Male", "Female"), function(sex) {
 
-    pars <- parameterize_pbtk(
-      chem.cas = "335-67-1",
-      species = "Mouse",
-      dosingadj = "Oral",
-      class.exclude = FALSE,
-      suppress.messages = TRUE,
-      default.to.human = TRUE
-    )
+    pars <- if (sex == "Male") pars_m else pars_f
 
-    # ---- Sex-specific parameters ----
-    if (sex == "Male") {
-      pars$kelim <- 0.001331
-      pars$Vdist <- 0.1805
-    } else {
-      pars$kelim <- 0.001851
-      pars$Vdist <- 0.1805
-    }
-    pars$Funbound.plasma <- 0.0142
-    pars$Rblood2plasma <- 0.9047
-    pars$Caco2.Pab <- 1.6
-write.csv(pars, "C:/Users/aloan/OneDrive - HC-SC PHAC-ASPC/Documents/PBTK-Modelling-PFAS/Output/pars_pfoa_pbtk.csv")
     out <- solve_pbtk(
       chem.cas = "335-67-1",
       days = max(time_vec),
@@ -1562,7 +1627,7 @@ p <- ggplot() +
   values = shape_map
   ) +
   theme_minimal() +
- coord_cartesian(ylim = c(0, 8)) + 
+ coord_cartesian(ylim = c(0, 12.5)) + 
   theme(
       text = element_text(family = "Arial", size = 12),
       axis.text.x = element_text(angle = 45, hjust = 1),
@@ -1590,8 +1655,8 @@ cat(sprintf("n = %d–%d mice/group\n", min_n, max_n))
 ##PFOA Clearance
 ```{r}
 #convert to ml/day/kg
-clearance_pred_m <- 0.0002402 * 24* 1000
-clearance_pred_f <- 0.0003341 * 24* 1000
+clearance_pred_m <- pfoa_clearance_m * 24* 1000
+clearance_pred_f <- pfoa_clearance_f * 24* 1000
 clearance <- mean(c(clearance_pred_f, clearance_pred_m), na.rm = TRUE)
 
 
@@ -1655,7 +1720,7 @@ p <- ggplot() +
   values = shape_map
   ) +
   theme_minimal() +
- coord_cartesian(ylim = c(0, 8)) +  
+ coord_cartesian(ylim = c(0, 12.5)) +  
   theme(
       text = element_text(family = "Arial", size = 12),
       axis.text.x = element_text(angle = 45, hjust = 1),
@@ -2195,10 +2260,57 @@ elbow_similarity
 ```
 ##Inital plot of 5k chemicals
 ```{r}
+label_lookup <- c(
+  "DTXSID40892486" = "PFOA",
+  "DTXSID3031864"  = "PFOS",
+  "DTXSID4059916"  = "PFBA",
+  "DTXSID6062599"  = "PFPeA",
+  "DTXSID3031862"  = "PFHxA",
+  "DTXSID1037303"  = "PFHpA",
+  "DTXSID8031863"  = "PFNA",
+  "DTXSID3031860"  = "PFDA",
+  "DTXSID8047553"  = "PFUdA",
+  "DTXSID8031861"  = "PFDoA",
+  "DTXSID90868151" = "PFTrDA",
+  "DTXSID3059921"  = "PFTeDA",
+  "DTXSID60873015" = "PFBS",
+  "DTXSID8062600"  = "PFPeS",
+  "DTXSID7040150"  = "PFHxS",
+  "DTXSID8059920"  = "PFHpS",
+  "DTXSID8071356"  = "PFNS",
+  "DTXSID00873014" = "PFDS",
+  "DTXSID30891564" = "4:2 FTS",
+  "DTXSID6067331"  = "6:2 FTS",
+  "DTXSID00192353" = "8:2 FTS",
+  "DTXSID10624392" = "N_MeFOSAA",
+  "DTXSID60892504" = "N_EtFOSAA",
+  "DTXSID3038939"  = "FOSA",
+  "DTXSID2060032"  = "DONA",
+  "DTXSID70880215" = "HFPO-DA"
+)
+
 pfos<- ggplot() +
   geom_point(data = genra_combined %>% 
                 filter(Chemical =="PFOS"),
              aes(x = fct_reorder(dsstox_sid, similarity, .desc = TRUE), y = similarity, color = similarity), alpha = 0.8, size = 4) +
+  geom_text_repel(
+  data = genra_combined %>%
+    filter(Chemical == "PFOS",
+           dsstox_sid %in% names(label_lookup)),
+  aes(
+    x = fct_reorder(dsstox_sid, similarity, .desc = TRUE),
+    y = similarity,
+    label = label_lookup[dsstox_sid]
+  ),
+  size = 8,
+  max.overlaps = Inf,
+  force = 4,
+  box.padding = 2,
+  point.padding = 0.6,
+  min.segment.length = 0,
+  segment.size = 1.5,
+  max.time = 2
+)+
   facet_wrap(~ Chemical, scales = "free_y") +
       scale_color_viridis(option = "plasma", direction = -1) +
   labs(
@@ -2226,6 +2338,24 @@ pfoa <-ggplot() +
                 filter(Chemical =="PFOA"),
              aes(x = fct_reorder(dsstox_sid, similarity, .desc = TRUE), y = similarity, color = similarity),
        alpha = 0.8, size = 4) +
+    geom_text_repel(
+  data = genra_combined %>%
+    filter(Chemical == "PFOA",
+           dsstox_sid %in% names(label_lookup)),
+  aes(
+    x = fct_reorder(dsstox_sid, similarity, .desc = TRUE),
+    y = similarity,
+    label = label_lookup[dsstox_sid]
+  ),
+  size = 8,
+  max.overlaps = Inf,
+  force = 4,
+  box.padding = 2,
+  point.padding = 0.6,
+  min.segment.length = 0,
+  segment.size = 1.5,
+  max.time = 2
+)+
   facet_wrap(~ Chemical, scales = "free_y") +
       scale_color_viridis(option = "plasma", direction = -1) +
   labs(

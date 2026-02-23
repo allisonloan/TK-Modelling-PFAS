@@ -1,3 +1,3 @@
 "","BW","Caco2.Pab","Caco2.Pab.dist","Clint","Clint.dist","Fabsgut","Fhep.assay.correction","Funbound.plasma","Funbound.plasma.dist","Funbound.plasma.adjustment","hepatic.bioavailability","hematocrit","kelim","kgutabs","liver.density","million.cells.per.gliver","MA","MW","Rblood2plasma","plasma.vol","Pow","pKa_Donor","pKa_Accept","Vdist"
-"pars_f",0.02,1.6,NA,NA,NA,0.9798,NA,0.0142,NA,NA,1,0.45,0.001851,1.572,NA,NA,3236,414.1,0.9047,0.05,1276,-4.2, ,0.1805
-"pars_m",0.02,1.6,NA,NA,NA,0.9798,NA,0.0142,NA,NA,1,0.45,0.001331,1.572,NA,NA,75860,500.1,0.9047,0.05,406400,-3.32, ,0.1805
+"pars_f",0.02,1.6,NA,NA,NA,0.9798,NA,0.0142,NA,NA,1,0.45,0.0027765,1.572,NA,NA,3236,414.1,0.9047,0.05,1276,-4.2, ,0.1805
+"pars_m",0.02,1.6,NA,NA,NA,0.9798,NA,0.0142,NA,NA,1,0.45,0.0019965,1.572,NA,NA,3236,414.1,0.9047,0.05,1276,-4.2, ,0.1805
