@@ -1,0 +1,700 @@
+#Load packages
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(stringr)
+library(purrr)
+library(readr)
+library(forcats)
+library(viridis)
+library(Rtsne)
+library(tibble)
+library(showtext)
+library(extrafont)
+library(pracma)
+library(ggrepel)
+
+windowsFonts(Arial = windowsFont("Arial"))
+```
+
+#Load 28d Feces
+```{r}
+#Imported in ng/g
+feces_28  <- read.csv("C:/Users/aloan/OneDrive - HC-SC PHAC-ASPC/Documents/PBTK-Modelling-PFAS/Input/Feces_28d.csv")
+
+#remove number of pellets 0
+  feces_28 <- feces_28[feces_28$Number.of.Fecal.Pellet.. != 0, ]
+
+
+doses <- c("Naive", "Vehicle", " PFOA 1.5",  " PFOS 1.5")
+print(colnames(feces_28))
+pfas_cols <- c(
+  "PFOA", "PFOS", "PFBA", "PFPeA", "PFHxA", "PFHpA", "PFNA", "PFDA", "PFUdA", "PFDoA", "PFTrDA", "PFTeDA", "HFPO.DA", "DONA","PFBS", "PFPeS", "PFHxS", "PFHpS", "PFNS", "PFDS",
+  "X4_2.FTS", "X6_2_FTS", "X8_2.FTS")
+mdls_naive_vehicle_166_05pfoa <- c(
+  PFOA = 0.151, PFOS = 0.212, PFBA = 0.138, PFPeA = 0.105, PFHxA = 0.061,
+  PFHpA = 0.090, PFNA = 0.112, PFDA = 0.087, PFUdA = 0.109, PFDoA = 0.077,
+  PFTrDA = 0.127, PFTeDA = 0.062, HFPO.DA =0.154,DONA= 0.157,PFBS = 0.361, PFPeS = 0.214, PFHxS = 0.192, PFHpS = 0.124, PFNS = 0.225, PFDS = 0.140, `X4_2.FTS` = 0.057, `X6_2_FTS` = 0.098,
+  `X8_2.FTS` = 0.093)
+
+mdls_05pos_1pfoa_15pfoa <- c(
+  PFOA = 1.44, PFOS = 3.79, PFBA = 0.866, PFPeA = 0.815, PFHxA = 0.770, PFHpA = 0.835, PFNA = 0.774, PFDA = 0.844, PFUdA = 0.633, PFDoA = 0.266, PFTrDA = 0.622, PFTeDA = 0.877, HFPO.DA =2.081,DONA= 0.725,PFBS = 0.602, PFPeS = 2.42, PFHxS = 1.72, PFHpS = 1.40, PFNS = 2.29, PFDS = 1.73, `X4_2.FTS` = 1.27, `X6_2_FTS` = 1.73,
+  `X8_2.FTS` = 1.45)
+
+mdls_1pfos <-  c(
+  PFOA = 2.89, PFOS = 7.58, PFBA = 1.73, PFPeA = 1.63, PFHxA = 1.54, PFHpA = 1.67, PFNA = 1.55, PFDA = 1.69, PFUdA = 1.27, PFDoA = 0.53, PFTrDA = 1.24, PFTeDA = 1.75, HFPO.DA =4.16,DONA= 1.45,PFBS = 1.20, PFPeS = 4.84, PFHxS = 3.43, PFHpS = 2.79, PFNS = 4.59, PFDS = 3.46, `X4_2.FTS` = 2.54, `X6_2_FTS` = 3.47,
+  `X8_2.FTS` = 7.24)
+
+mdls_1.5pfos <-  c(
+  PFOA = 7.22, PFOS = 18.95, PFBA = 4.33, PFPeA = 4.08, PFHxA = 3.85, PFHpA = 4.17, PFNA = 3.87, PFDA = 4.22, PFUdA = 3.16, PFDoA = 1.33, PFTrDA = 3.11, PFTeDA = 4.39, HFPO.DA =10.41,DONA= 3.63,PFBS = 3.01, PFPeS = 12.09, PFHxS = 8.58, PFHpS = 6.98, PFNS = 11.47, PFDS = 8.66, `X4_2.FTS` = 6.35, `X6_2_FTS` = 8.67,
+  `X8_2.FTS` = 2.90)
+
+mdls_df <- bind_rows(
+  tibble(Group = "Naive", !!!mdls_naive_vehicle_166_05pfoa),
+  tibble(Group = "Vehicle", !!!mdls_naive_vehicle_166_05pfoa),
+  tibble(Group = "PFOA 1.5", !!!mdls_05pos_1pfoa_15pfoa),
+  tibble(Group = "PFOS 1.5", !!!mdls_1.5pfos)
+) %>%
+  pivot_longer(
+    -Group,
+    names_to = "PFAS",
+    values_to = "MDL"
+  )
+
+feces_long <- feces_28 %>%
+  pivot_longer(
+    cols = all_of(pfas_cols),
+    names_to = "PFAS",
+    values_to = "Value"
+  )
+
+feces_long <- feces_long %>%
+  left_join(mdls_df, by = c("Group", "PFAS"))
+
+feces_long <- feces_long %>%
+  mutate(
+    Value = ifelse(Value == "<MDL" & !is.na(MDL),
+                   MDL / 2,
+                   as.numeric(Value))
+  )
+feces_28_fixed <- feces_long %>%
+  select(-MDL) %>%
+  pivot_wider(
+    names_from = PFAS,
+    values_from = Value
+  )
+
+
+write.csv(feces_28_fixed, file = "C:/Users/aloan/OneDrive - HC-SC PHAC-ASPC/Documents/PBTK-Modelling-PFAS/Output/Feces_PFAS_values_fixed_28d.csv", row.names = FALSE)
+
+```
+
+##Plotting 28d Feces Data
+```{r}
+feces_28 <- read.csv(file = "C:/Users/aloan/OneDrive - HC-SC PHAC-ASPC/Documents/PBTK-Modelling-PFAS/Output/Feces_PFAS_values_fixed_28d.csv")
+
+other_pfas <- setdiff(pfas_cols, c("PFOS", "PFOA"))
+plasma_colors <- viridis(length(other_pfas), option = "plasma")
+names(plasma_colors) <- other_pfas
+
+custom_colors <- c(
+  "PFOS" = "red",   
+  "PFOA" = "blue",    
+  plasma_colors          
+)
+
+group_levels <- c(
+  "Naive", "Vehicle",
+  paste("PFOS", c("1.5")),
+  paste("PFOA", c("1.5"))
+)
+
+data_combined_long <- feces_28 %>%
+  pivot_longer(
+    cols = all_of(pfas_cols),
+    names_to = "PFAS_name",
+    values_to = "PFAS_conc"
+  ) %>%
+  filter(!is.na(PFAS_conc)) %>%
+  mutate(
+    PFAS_conc = as.numeric(PFAS_conc),
+    group = factor(Group, levels = group_levels),
+    PFAS_name = factor(PFAS_name, levels = names(custom_colors)) 
+  )
+average_pfas <- feces_28 %>%
+  group_by(Group) %>%
+  summarise(
+    Mean_PFOS = format(mean(PFOS, na.rm = TRUE), scientific = FALSE),
+    Mean_PFOA = format(mean(PFOA, na.rm = TRUE), scientific = FALSE),
+    .groups = "drop"
+  )
+
+print(average_pfas)
+shape_map <- c(`Male` = 24, `Female` = 21)
+
+
+data_combined_long <- subset(data_combined_long, !(Group %in% "Naive"))
+# Plot
+p <- ggplot(data_combined_long, aes(x = group, y = PFAS_conc)) +
+  geom_jitter(aes(color = factor(PFAS_name),
+                  fill = factor(PFAS_name),
+                  shape = Sex),
+              size = 2, alpha = 0.5, stroke = 1) +
+  scale_color_manual(values = custom_colors, name = "PFAS_name") +
+  scale_fill_manual(values = custom_colors, name = "PFAS_name") +
+  scale_shape_manual(values = shape_map, name = "Sex") +
+ coord_cartesian(ylim = c(0, 15000)) +  
+  theme_minimal() +
+  theme(
+        text = element_text(family = "Arial", size = 12),
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.position = "none",
+      panel.grid.major = element_line(size = 0.5),
+      panel.grid.minor = element_blank()
+  )
+print(p)
+ggsave(filename = "../plots/Feces_conc_28d.png", plot = p, width = 5, height = 5, dpi = 300,bg = "white")
+
+replicate_summary <- feces_28 %>%
+  group_by(Group) %>%  
+  summarise(n = n(), .groups = "drop")
+min_n <- min(replicate_summary$n)
+max_n <- max(replicate_summary$n)
+cat(sprintf("n = %d–%d mice/group\n", min_n, max_n))
+
+```
+
+#Load 56d Feces
+```{r}
+#IMPORTED ng/g
+feces_56  <- read.csv("C:/Users/aloan/OneDrive - HC-SC PHAC-ASPC/Documents/PBTK-Modelling-PFAS/Input/Feces_56d.csv")
+#remove number of pellets 0
+  feces_56 <- feces_56[feces_56$Number.of.Fecal.Pellet.. != 0, ]
+
+mdls_df <- bind_rows(
+  tibble(Group = "Naive", !!!mdls_naive_vehicle_166_05pfoa),
+  tibble(Group = "Vehicle", !!!mdls_naive_vehicle_166_05pfoa),
+  tibble(Group = "PFOS 0.166", !!!mdls_naive_vehicle_166_05pfoa),
+  tibble(Group = "PFOA 0.166", !!!mdls_naive_vehicle_166_05pfoa),
+  tibble(Group = "PFOA 0.5", !!!mdls_naive_vehicle_166_05pfoa),
+  tibble(Group = "PFOS 0.5", !!!mdls_05pos_1pfoa_15pfoa),
+  tibble(Group = "PFOA 1", !!!mdls_05pos_1pfoa_15pfoa),
+  tibble(Group = "PFOA 1.5", !!!mdls_05pos_1pfoa_15pfoa),
+  tibble(Group = "PFOS 1", !!!mdls_1pfos),
+  tibble(Group = "PFOS 1.5", !!!mdls_1.5pfos)
+) %>%
+  pivot_longer(
+    -Group,
+    names_to = "PFAS",
+    values_to = "MDL"
+  )
+
+feces_long <- feces_56 %>%
+  pivot_longer(
+    cols = all_of(pfas_cols),
+    names_to = "PFAS",
+    values_to = "Value"
+  )
+
+feces_long <- feces_long %>%
+  left_join(mdls_df, by = c("Group", "PFAS"))
+
+feces_long <- feces_long %>%
+  mutate(
+    Value = ifelse(Value == "<MDL" & !is.na(MDL),
+                   MDL / 2,
+                   as.numeric(Value))
+  )
+feces_56_fixed <- feces_long %>%
+  select(-MDL) %>%
+  pivot_wider(
+    names_from = PFAS,
+    values_from = Value
+  )
+
+write.csv(feces_56_fixed, file = "C:/Users/aloan/OneDrive - HC-SC PHAC-ASPC/Documents/PBTK-Modelling-PFAS/Output/Feces_PFAS_values_fixed_56d.csv", row.names = FALSE)
+```
+
+##Plotting 56d Feces Data
+```{r}
+feces_56 <- read.csv(file = "C:/Users/aloan/OneDrive - HC-SC PHAC-ASPC/Documents/PBTK-Modelling-PFAS/Output/Feces_PFAS_values_fixed_56d.csv" )
+pfas_cols <- c(
+  "PFOA", "PFOS", "PFBA", "PFPeA", "PFHxA", "PFHpA", "PFNA", "PFDA", "PFUdA", "PFDoA", "PFTrDA", "PFTeDA", "HFPO.DA", "DONA","PFBS", "PFPeS", "PFHxS", "PFHpS", "PFNS", "PFDS",
+  "X4_2.FTS", "X6_2_FTS", "X8_2.FTS")
+other_pfas <- setdiff(pfas_cols, c("PFOS", "PFOA"))
+plasma_colors <- viridis(length(other_pfas), option = "plasma")
+names(plasma_colors) <- other_pfas
+
+custom_colors <- c(
+  "PFOS" = "red",   
+  "PFOA" = "blue",   
+  plasma_colors          
+)
+
+group_levels <- c("Naive", "Vehicle", "PFOS 0.166", "PFOS 0.5", "PFOS 1", "PFOS 1.5", "PFOA 0.166", "PFOA 0.5", "PFOA 1", "PFOA 1.5")
+
+
+data_combined_long <- feces_56 %>%
+  pivot_longer(
+    cols = all_of(pfas_cols),
+    names_to = "PFAS_name",
+    values_to = "PFAS_conc"
+  ) %>%
+  filter(!is.na(PFAS_conc)) %>%
+  mutate(
+    PFAS_conc = as.numeric(PFAS_conc),
+    group = factor(Group, levels = group_levels),
+    PFAS_name = factor(PFAS_name, levels = names(custom_colors)) 
+  )
+
+average_pfas <- feces_56 %>%
+  group_by(Group) %>%
+  summarise(
+    Mean_PFOS = format(mean(PFOS, na.rm = TRUE), scientific = FALSE),
+    Mean_PFOA = format(mean(PFOA, na.rm = TRUE), scientific = FALSE),
+    .groups = "drop"
+  )
+
+print(average_pfas)
+
+shape_map <- c(`Male` = 24, `Female` = 21)
+data_combined_long <- subset(data_combined_long, !(Group %in% "Naive"))
+# Plot
+p <- ggplot(data_combined_long, aes(x = group, y = PFAS_conc)) +
+  geom_jitter(aes(color = factor(PFAS_name),
+                  fill = factor(PFAS_name),
+                  shape = Sex),
+              size = 2, alpha = 0.5, stroke = 1) +
+  scale_color_manual(values = custom_colors, name = "PFAS_name") +
+  scale_fill_manual(values = custom_colors, name = "PFAS_name") +
+  scale_shape_manual(values = shape_map, name = "Sex") +
+ coord_cartesian(ylim = c(0, 15000)) +  
+  theme_minimal() +
+  theme(
+        text = element_text(family = "Arial", size = 12),
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.position = "none",
+      panel.grid.major = element_line(size = 0.5),
+      panel.grid.minor = element_blank()
+  )
+print(p)
+ggsave(filename = "../plots/feces_56_conc.png", plot = p, width = 12.5, height = 5, dpi = 300,bg = "white")
+
+replicate_summary <- feces_56%>%
+  group_by(Group) %>%  
+  summarise(n = n(), .groups = "drop")
+min_n <- min(replicate_summary$n)
+max_n <- max(replicate_summary$n)
+cat(sprintf("n = %d–%d mice/group\n", min_n, max_n))
+```
+
+
+#Correlation between liver and feces
+```{r}
+custom_colors_named <- c(
+  "Vehicle" = "#330597",
+  "PFOS 0.166"   = "#b12a90",
+  "PFOS 0.5"     = "#d35171",
+  "PFOS 1"       = "#f68f44",
+  "PFOS 1.5"     = "#fec029",
+    "PFOA 0.166"   = "#b12a90",
+  "PFOA 0.5"     = "#d35171",
+  "PFOA 1"       = "#f68f44",
+  "PFOA 1.5"     = "#fec029"
+)
+shape_map <- c(`28` = 24, `56` = 21)
+#########56 day
+#Imported in mg/kg
+liver_56  <- read.csv("C:/Users/aloan/OneDrive - HC-SC PHAC-ASPC/Documents/PBTK-Modelling-PFAS/Input/Liver_PFAS_values_fixed_56d.csv")
+liver_28  <- read.csv("C:/Users/aloan/OneDrive - HC-SC PHAC-ASPC/Documents/PBTK-Modelling-PFAS/Input/Liver_PFAS_values_fixed_28d.csv")
+
+liver_28 <- liver_28 %>% mutate(Time = 28)
+liver_56 <- liver_56 %>% mutate(Time = 56)
+liver <- rbind(liver_28, liver_56)
+
+
+liver <- liver %>%
+  mutate(Group2 = if_else(Group %in% c("Naive", "Vehicle"),
+                         paste("control", Group),
+                         Group))
+liver <- liver %>%
+  separate(Group2, into = c("PFAS", "Dose"), sep = " ", remove = T)
+
+controls <- liver %>%
+  filter(Dose %in% c("Naive", "Vehicle")) %>%
+  slice(rep(1:n(), each = 2)) %>%
+  mutate(PFAS = rep(c("PFOS", "PFOA"), times = n() / 2))
+
+liver <- liver %>%
+  filter(!(Dose %in% c("Naive", "Vehicle"))) %>%
+  bind_rows(controls)
+
+liver_pfos <- subset(liver) %>%
+  select("Mouse.ID", "PFOS", "Group", "Sex", "PFAS", "Time")
+liver_pfoa <- subset(liver) %>%
+  select("Mouse.ID", "PFOA", "Group", "Sex", "PFAS", "Time")
+
+#imported ng/g
+feces_56 <- read.csv(file = "C:/Users/aloan/OneDrive - HC-SC PHAC-ASPC/Documents/PBTK-Modelling-PFAS/Input/Feces_PFAS_values_fixed_56d.csv" )
+feces_28 <- read.csv(file = "C:/Users/aloan/OneDrive - HC-SC PHAC-ASPC/Documents/PBTK-Modelling-PFAS/Input/Feces_PFAS_values_fixed_28d.csv" )
+
+feces_28 <- feces_28 %>% mutate(Time = 28)
+feces_56 <- feces_56 %>% mutate(Time = 56)
+feces <- rbind(feces_28, feces_56)
+
+feces <- feces %>% 
+  mutate(across(PFOA:X8_2.FTS, ~ .x * 1e-6))  #NG/G TO MG/KG
+
+feces <- feces %>%
+  mutate(Group2 = if_else(Group %in% c("Naive", "Vehicle"),
+                         paste("control", Group),
+                         Group))
+feces <- feces %>%
+  separate(Group2, into = c("PFAS", "Dose"), sep = " ", remove = T)
+
+controls <- feces %>%
+  filter(Dose %in% c("Naive", "Vehicle")) %>%
+  slice(rep(1:n(), each = 2)) %>%
+  mutate(PFAS = rep(c("PFOS", "PFOA"), times = n() / 2))
+
+feces <- feces %>%
+  filter(!(Dose %in% c("Naive", "Vehicle"))) %>%
+  bind_rows(controls)
+
+feces_pfos <- subset(feces) %>%
+  select("Mouse.ID", "PFOS", "Group", "Sex", "PFAS", "Time")
+feces_pfoa <- subset(feces) %>%
+  select("Mouse.ID", "PFOA", "Group", "Sex", "PFAS", "Time")
+
+pfos<- inner_join(
+  feces_pfos,
+  liver_pfos,
+  by = c("Mouse.ID","Group", "Sex", "PFAS", "Time"),
+  suffix = c("_feces","_liver")
+) 
+pfos <- subset(pfos, PFAS == "PFOS")
+
+pfoa<- inner_join(
+  feces_pfoa,
+  liver_pfoa,
+  by = c("Mouse.ID","Group", "Sex", "PFAS", "Time"),
+  suffix = c( "_feces","_liver")
+) 
+pfoa <- subset(pfoa, PFAS == "PFOA")
+
+pfos <- subset(pfos, !(Group %in% "Naive"))
+pfoa <- subset(pfoa, !(Group %in% "Naive"))
+p <- ggplot(pfos, aes(x = PFOS_liver, y = PFOS_feces)) +
+  # Single lm line
+  geom_smooth(method = "lm", linetype = "dashed", color = "red", inherit.aes = FALSE,
+              aes(x = PFOS_liver, y = PFOS_feces)) +
+    # Jittered points
+  geom_jitter(aes(shape = factor(Time), color = factor(Group), fill = factor(Group)),
+              size = 3, alpha = 0.5, stroke = 1) +
+  # Labels
+  labs(title = "Correlation between Liver and Feces",
+       x = "Liver (mg/kg)",
+       y = "Feces (mg/kg)") +
+  
+  # Manual scales
+  scale_color_manual(name = "Group", values = custom_colors_named) +
+  scale_fill_manual(name = "Group", values = custom_colors_named) +
+  scale_shape_manual(name = "Time (days)", values = shape_map) +
+  
+  # Theme
+  theme_minimal() +
+  theme(
+    text = element_text(family = "Arial", size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    panel.grid.major = element_line(size = 0.5),
+    panel.grid.minor = element_blank()
+  )
+
+print(p)
+ggsave(filename = "../plots/fecesxliver_pfos.png", plot = p, width = 7, height = 6, dpi = 300,bg = "white")
+
+p <- ggplot(pfoa, aes(x = PFOA_liver, y = PFOA_feces)) +
+  # Single lm line
+  geom_smooth(method = "lm", linetype = "dashed", color = "red", inherit.aes = FALSE,
+              aes(x = PFOA_liver, y = PFOA_feces)) +
+    # Jittered points
+  geom_jitter(aes(shape = factor(Time), color = factor(Group), fill = factor(Group)),
+              size = 3, alpha = 0.5, stroke = 1) +
+  # Labels
+  labs(title = "Correlation between Liver and Feces",
+       x = "Liver (mg/kg)",
+       y = "Feces (mg/kg)") +
+  
+  # Manual scales
+  scale_color_manual(name = "Group", values = custom_colors_named) +
+  scale_fill_manual(name = "Group", values = custom_colors_named) +
+  scale_shape_manual(name = "Time (days)", values = shape_map) +
+  
+  # Theme
+  theme_minimal() +
+  theme(
+    text = element_text(family = "Arial", size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    panel.grid.major = element_line(size = 0.5),
+    panel.grid.minor = element_blank()
+  )
+print(p)
+ggsave(filename = "../plots/fecesxliver_pfoa.png", plot = p, width = 7, height = 6, dpi = 300,bg = "white")
+replicate_summary <- pfoa%>%
+  group_by(Group, Time) %>%  
+  summarise(n = n(), .groups = "drop")
+min_n <- min(replicate_summary$n)
+max_n <- max(replicate_summary$n)
+cat(sprintf("n = %d–%d mice/group\n", min_n, max_n))
+
+
+replicate_summary <- pfos%>%
+  group_by(Group, Time) %>%  
+  summarise(n = n(), .groups = "drop")
+min_n <- min(replicate_summary$n)
+max_n <- max(replicate_summary$n)
+cat(sprintf("n = %d–%d mice/group\n", min_n, max_n))
+```
+
+#Correlation between plasma and feces
+```{r}
+#########56 day
+#Imported in mg/kg
+plasma_56 <- read.csv("C:/Users/aloan/OneDrive - HC-SC PHAC-ASPC/Documents/PBTK-Modelling-PFAS/Input/Plasma_PFAS_values_fixed_56d.csv")
+plasma_28 <- read.csv("C:/Users/aloan/OneDrive - HC-SC PHAC-ASPC/Documents/PBTK-Modelling-PFAS/Input/plasma_PFAS_values_fixed_28d.csv")
+plasma_28 <- plasma_28 %>% mutate(Time = 28)
+plasma_56 <- plasma_56 %>% mutate(Time = 56)
+plasma <- rbind(plasma_28, plasma_56)
+
+
+plasma <- plasma %>%
+  mutate(Group2 = if_else(Group %in% c("Naive", "Vehicle"),
+                         paste("control", Group),
+                         Group))
+plasma <- plasma %>%
+  separate(Group2, into = c("PFAS", "Dose"), sep = " ", remove = T)
+
+controls <- plasma %>%
+  filter(Dose %in% c("Naive", "Vehicle")) %>%
+  slice(rep(1:n(), each = 2)) %>%
+  mutate(PFAS = rep(c("PFOS", "PFOA"), times = n() / 2))
+
+plasma <- plasma %>%
+  filter(!(Dose %in% c("Naive", "Vehicle"))) %>%
+  bind_rows(controls)
+
+plasma_pfos <- subset(plasma) %>%
+  select("Mouse.ID", "PFOS", "Group", "Sex", "PFAS", "Time")
+plasma_pfoa <- subset(plasma) %>%
+  select("Mouse.ID", "PFOA", "Group", "Sex", "PFAS", "Time")
+
+pfos<- inner_join(
+  feces_pfos,
+  plasma_pfos,
+  by = c("Mouse.ID","Group", "Sex", "PFAS", "Time"),
+  suffix = c("_feces","_plasma")
+) 
+pfos <- subset(pfos, PFAS == "PFOS")
+
+pfoa<- inner_join(
+  feces_pfoa,
+  plasma_pfoa,
+  by = c("Mouse.ID","Group", "Sex", "PFAS", "Time"),
+  suffix = c( "_feces","_plasma")
+) 
+pfoa <- subset(pfoa, PFAS == "PFOA")
+
+pfos <- subset(pfos, !(Group %in% "Naive"))
+pfoa <- subset(pfoa, !(Group %in% "Naive"))
+
+p <- ggplot(pfos, aes(x = PFOS_plasma, y = PFOS_feces)) +
+  # Single lm line
+  geom_smooth(method = "lm", linetype = "dashed", color = "red", inherit.aes = FALSE,
+              aes(x = PFOS_plasma, y = PFOS_feces)) +
+    # Jittered points
+  geom_jitter(aes(shape = factor(Time), color = factor(Group), fill = factor(Group)),
+              size = 3, alpha = 0.5, stroke = 1) +
+  # Labels
+  labs(title = "Correlation between plasma and Feces",
+       x = "plasma (mg/L)",
+       y = "Feces (mg/kg)") +
+  
+  # Manual scales
+  scale_color_manual(name = "Group", values = custom_colors_named) +
+  scale_fill_manual(name = "Group", values = custom_colors_named) +
+  scale_shape_manual(name = "Time (days)", values = shape_map) +
+  
+  # Theme
+  theme_minimal() +
+  theme(
+    text = element_text(family = "Arial", size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    panel.grid.major = element_line(size = 0.5),
+    panel.grid.minor = element_blank()
+  )
+
+print(p)
+ggsave(filename = "../plots/fecesxplasma_pfos.png", plot = p, width = 7, height = 6, dpi = 300,bg = "white")
+
+p <- ggplot(pfoa, aes(x = PFOA_plasma, y = PFOA_feces)) +
+  # Single lm line
+  geom_smooth(method = "lm", linetype = "dashed", color = "red", inherit.aes = FALSE,
+              aes(x = PFOA_plasma, y = PFOA_feces)) +
+    # Jittered points
+  geom_jitter(aes(shape = factor(Time), color = factor(Group), fill = factor(Group)),
+              size = 3, alpha = 0.5, stroke = 1) +
+  # Labels
+  labs(title = "Correlation between plasma and Feces",
+       x = "plasma (mg/L)",
+       y = "Feces (mg/kg)") +
+  
+  # Manual scales
+  scale_color_manual(name = "Group", values = custom_colors_named) +
+  scale_fill_manual(name = "Group", values = custom_colors_named) +
+  scale_shape_manual(name = "Time (days)", values = shape_map) +
+  
+  # Theme
+  theme_minimal() +
+  theme(
+    text = element_text(family = "Arial", size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    panel.grid.major = element_line(size = 0.5),
+    panel.grid.minor = element_blank()
+  )
+print(p)
+ggsave(filename = "../plots/fecesxplasma_pfoa.png", plot = p, width = 7, height = 6, dpi = 300,bg = "white")
+
+replicate_summary <- pfoa%>%
+  group_by(Group, Time) %>%  
+  summarise(n = n(), .groups = "drop")
+min_n <- min(replicate_summary$n)
+max_n <- max(replicate_summary$n)
+cat(sprintf("n = %d–%d mice/group\n", min_n, max_n))
+
+
+replicate_summary <- pfos%>%
+  group_by(Group, Time) %>%  
+  summarise(n = n(), .groups = "drop")
+min_n <- min(replicate_summary$n)
+max_n <- max(replicate_summary$n)
+cat(sprintf("n = %d–%d mice/group\n", min_n, max_n))
+```
+
+#% of dose feces 
+```{r}
+df_pfos <- pfos_obs %>%
+  filter(Tissue == "Feces", Group != "Vehicle") %>%
+  select(Dose, Time, PFAS_conc, Mouse.ID, Sex) %>%
+  mutate(
+    Chemical = "PFOS",
+    ng_kg_feces = PFAS_conc * 1000,
+    feces_rate_kg_h_kg = 0.08 / 24,
+    ng_h_kg = ng_kg_feces * feces_rate_kg_h_kg,
+    Feces_ng_kg = ng_h_kg * 24 * Time,
+    Admin_Dose_ng_kg = Dose * Time * 1e6,
+    Percent_Dose_Feces = (Feces_ng_kg / Admin_Dose_ng_kg) * 100
+  )
+
+## ---- PFOA ----
+df_pfoa <- pfoa_obs %>%
+  filter(Tissue == "Feces", Group != "Vehicle") %>%
+  select(Dose, Time, PFAS_conc, Mouse.ID, Sex) %>%
+  mutate(
+    Chemical = "PFOA",
+    ng_kg_feces = PFAS_conc * 1000,
+    feces_rate_kg_h_kg = 0.08 / 24,
+    ng_h_kg = ng_kg_feces * feces_rate_kg_h_kg,
+    Feces_ng_kg = ng_h_kg * 24 * Time,
+    Admin_Dose_ng_kg = Dose * Time * 1e6,
+    Percent_Dose_Feces = (Feces_ng_kg / Admin_Dose_ng_kg) * 100
+  )
+
+## ---- Combine ----
+df_all <- bind_rows(df_pfos, df_pfoa)
+
+shape_map <- c(`Male` = 24, `Female` = 21)
+custom_colors_named <- c(
+  "PFOS"   = "#f2844b",
+  "PFOA"   = "#6a00a8")
+
+df_all$Dose_Time <- paste0(df_all$Dose, " (", df_all$Time, ")")
+
+df_avg <- df_all %>%
+  group_by(Chemical, Dose_Time) %>%
+  summarise(
+    Mean_Percent_Dose_Feces = mean(Percent_Dose_Feces),
+    .groups = "drop"
+  )
+
+p <- ggplot(df_all,
+       aes(
+         x = factor(Dose_Time),
+         y = Percent_Dose_Feces,
+         color = Chemical,
+         fill  = Chemical,
+         shape = Sex,
+         group = interaction(Mouse.ID, Chemical)
+       )) +
+  geom_point(
+   size = 2, alpha = 0.5, width = 0.1, stroke = 1
+  ) +
+  geom_line(
+    data = df_avg,
+    aes(
+      x = factor(Dose_Time),
+      y = Mean_Percent_Dose_Feces,
+      group = Chemical,
+      color = Chemical
+    ),
+    inherit.aes = FALSE,
+    linewidth = 0.8,
+    linetype = "dashed"
+  ) +
+  scale_color_manual(
+    name = "Chemical",
+    values = custom_colors_named
+  ) +
+  scale_fill_manual(
+    name = "Chemical",
+    values = custom_colors_named
+  ) +
+  scale_shape_manual(
+    name = "Sex",
+    values = shape_map
+  ) +
+  
+  labs(
+    x = NULL,
+    y = "% of administered dose in feces"
+  ) +
+  
+  theme_minimal() +
+  theme(
+    text = element_text(family = "Arial", size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "none",
+    panel.grid.major = element_line(linewidth = 0.5),
+    panel.grid.minor = element_blank()
+  )
+print(p)
+ggsave(filename = "../plots/percent_of_dose.png", plot = p, width = 6, height = 3, dpi = 300,bg = "white")
+
+replicate_summary <- df_all %>%
+  group_by(Dose_Time, Chemical) %>%  
+  summarise(n = n(), .groups = "drop")
+min_n <- min(replicate_summary$n)
+max_n <- max(replicate_summary$n)
+cat(sprintf("n = %d–%d mice/group\n", min_n, max_n))
+
+mean <- df_all %>%
+  group_by(Chemical) %>%
+  summarise(
+    n = n(),
+    Percent_Dose_Feces = mean(Percent_Dose_Feces, na.rm = TRUE)
+  )
+```

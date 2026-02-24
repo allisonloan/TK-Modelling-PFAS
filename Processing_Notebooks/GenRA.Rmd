@@ -1,0 +1,412 @@
+#Elbow calc
+```{r}
+#Load in analog info
+RA_pfoa <-read.csv("C:/Users/aloan/OneDrive - HC-SC PHAC-ASPC/Documents/PBTK-Modelling-PFAS/Input/genra_20251208_PFOA.csv")
+RA_pfos <-read.csv("C:/Users/aloan/OneDrive - HC-SC PHAC-ASPC/Documents/PBTK-Modelling-PFAS/Input/genra_20251210_PFOS.csv")
+
+RA_pfoa <- RA_pfoa %>%
+  mutate(Chemical = "PFOA")
+
+
+RA_pfos <- RA_pfos %>%
+  mutate(Chemical = "PFOS")
+
+
+genra_combined<- rbind(RA_pfoa, RA_pfos) %>%
+  drop_na(similarity)
+pfos_sorted <- genra_combined %>%
+  filter(Chemical == "PFOS") %>%
+  arrange(desc(similarity)) %>%
+  mutate(rank = row_number())
+
+ggplot(pfos_sorted, aes(x = rank, y = similarity)) +
+  geom_point() +
+  geom_line() +
+  labs(x = "Rank", y = "Similarity", title = "Similarity Elbow Plot") +
+  theme_minimal()
+
+
+# Get coordinates
+x <- pfos_sorted$rank
+y <- pfos_sorted$similarity
+
+# Line from first to last point
+x1 <- min(x); y1 <- max(y)
+x2 <- max(x); y2 <- min(y)
+
+# Function to calculate distance from a point to a line
+point_line_distance <- function(x0, y0, x1, y1, x2, y2) {
+  abs((y2 - y1)*x0 - (x2 - x1)*y0 + x2*y1 - y2*x1) / sqrt((y2 - y1)^2 + (x2 - x1)^2)
+}
+
+distances <- point_line_distance(x, y, x1, y1, x2, y2)
+elbow_index <- which.max(distances)
+elbow_similarity <- y[elbow_index]
+
+elbow_index
+elbow_similarity
+
+pfoa_sorted <- genra_combined %>%
+  filter(Chemical == "PFOA") %>%
+  arrange(desc(similarity)) %>%
+  mutate(rank = row_number())
+
+ggplot(pfoa_sorted, aes(x = rank, y = similarity)) +
+  geom_point() +
+  geom_line() +
+  labs(x = "Rank", y = "Similarity", title = "Similarity Elbow Plot") +
+  theme_minimal()
+
+
+# Get coordinates
+x <- pfoa_sorted$rank
+y <- pfoa_sorted$similarity
+
+# Line from first to last point
+x1 <- min(x); y1 <- max(y)
+x2 <- max(x); y2 <- min(y)
+
+# Function to calculate distance from a point to a line
+point_line_distance <- function(x0, y0, x1, y1, x2, y2) {
+  abs((y2 - y1)*x0 - (x2 - x1)*y0 + x2*y1 - y2*x1) / sqrt((y2 - y1)^2 + (x2 - x1)^2)
+}
+
+distances <- point_line_distance(x, y, x1, y1, x2, y2)
+elbow_index <- which.max(distances)
+elbow_similarity <- y[elbow_index]
+
+elbow_index
+elbow_similarity
+
+```
+#Inital plot of 5k chemicals
+```{r}
+label_lookup <- c(
+  "DTXSID40892486" = "PFOA",
+  "DTXSID3031864"  = "PFOS",
+  "DTXSID4059916"  = "PFBA",
+  "DTXSID6062599"  = "PFPeA",
+  "DTXSID3031862"  = "PFHxA",
+  "DTXSID1037303"  = "PFHpA",
+  "DTXSID8031863"  = "PFNA",
+  "DTXSID3031860"  = "PFDA",
+  "DTXSID8047553"  = "PFUdA",
+  "DTXSID8031861"  = "PFDoA",
+  "DTXSID90868151" = "PFTrDA",
+  "DTXSID3059921"  = "PFTeDA",
+  "DTXSID60873015" = "PFBS",
+  "DTXSID8062600"  = "PFPeS",
+  "DTXSID7040150"  = "PFHxS",
+  "DTXSID8059920"  = "PFHpS",
+  "DTXSID8071356"  = "PFNS",
+  "DTXSID00873014" = "PFDS",
+  "DTXSID30891564" = "4:2 FTS",
+  "DTXSID6067331"  = "6:2 FTS",
+  "DTXSID00192353" = "8:2 FTS",
+  "DTXSID10624392" = "N_MeFOSAA",
+  "DTXSID60892504" = "N_EtFOSAA",
+  "DTXSID3038939"  = "FOSA",
+  "DTXSID2060032"  = "DONA",
+  "DTXSID70880215" = "HFPO-DA"
+)
+
+pfos<- ggplot() +
+  geom_point(data = genra_combined %>% 
+                filter(Chemical =="PFOS"),
+             aes(x = fct_reorder(dsstox_sid, similarity, .desc = TRUE), y = similarity, color = similarity), alpha = 0.8, size = 4) +
+  geom_text_repel(
+  data = genra_combined %>%
+    filter(Chemical == "PFOS",
+           dsstox_sid %in% names(label_lookup)),
+  aes(
+    x = fct_reorder(dsstox_sid, similarity, .desc = TRUE),
+    y = similarity,
+    label = label_lookup[dsstox_sid]
+  ),
+  size = 8,
+  max.overlaps = Inf,
+  force = 4,
+  box.padding = 2,
+  point.padding = 0.6,
+  min.segment.length = 0,
+  segment.size = 1.5,
+  max.time = 2
+)+
+  facet_wrap(~ Chemical, scales = "free_y") +
+      scale_color_viridis(option = "plasma", direction = -1) +
+  labs(
+    title = "NULL",
+    x = "NULL",
+    y = "Similarity",
+    color = "Similarity"
+  ) +
+    geom_hline(yintercept = 0.4, linetype = "dashed", color = "red",  linewidth = 0.8) +
+  ylim(0, 1) +
+  theme_minimal() +
+  theme(
+      text = element_text(family = "Arial", size = 12),
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.position = "b",
+      axis.line = element_line(color = "black", linewidth = 0.6),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank())
+print(pfos)
+ggsave(filename = "../plots/pfos_genra5k.png", plot = pfos, width = 20, height = 6, dpi = 300,bg = "white")
+
+
+pfoa <-ggplot() +
+  geom_point(data = genra_combined %>% 
+                filter(Chemical =="PFOA"),
+             aes(x = fct_reorder(dsstox_sid, similarity, .desc = TRUE), y = similarity, color = similarity),
+       alpha = 0.8, size = 4) +
+    geom_text_repel(
+  data = genra_combined %>%
+    filter(Chemical == "PFOA",
+           dsstox_sid %in% names(label_lookup)),
+  aes(
+    x = fct_reorder(dsstox_sid, similarity, .desc = TRUE),
+    y = similarity,
+    label = label_lookup[dsstox_sid]
+  ),
+  size = 8,
+  max.overlaps = Inf,
+  force = 4,
+  box.padding = 2,
+  point.padding = 0.6,
+  min.segment.length = 0,
+  segment.size = 1.5,
+  max.time = 2
+)+
+  facet_wrap(~ Chemical, scales = "free_y") +
+      scale_color_viridis(option = "plasma", direction = -1) +
+  labs(
+    title = "NULL",
+    x = "NULL",
+    y = "Similarity",
+    color = "Carbon lenght"
+  ) +
+    geom_hline(yintercept = 0.3333333, linetype = "dashed", color = "red",  linewidth = 0.8) +
+  ylim(0, 1) +
+  theme_minimal() +
+  theme(
+      text = element_text(family = "Arial", size = 12),
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.position = "none",
+      panel.grid.major = element_blank(),
+        axis.line = element_line(color = "black", linewidth = 0.6),
+      panel.grid.minor = element_blank())
+print(pfoa)
+ggsave(filename = "../plots/pfoa_genra5k.png", plot = pfoa, width = 20, height = 6, dpi = 300,bg = "white")
+```
+#Plotting 23 main PFAS
+```{r}
+RA_pfoa <-read.csv("C:/Users/aloan/OneDrive - HC-SC PHAC-ASPC/Documents/PBTK-Modelling-PFAS/Input/genra_20251208_PFOA.csv")
+RA_pfos <-read.csv("C:/Users/aloan/OneDrive - HC-SC PHAC-ASPC/Documents/PBTK-Modelling-PFAS/Input/genra_20251210_PFOS.csv")
+
+RA_pfoa <- RA_pfoa %>%
+  mutate(Chemical = "PFOA")
+
+
+RA_pfos <- RA_pfos %>%
+  mutate(Chemical = "PFOS")
+
+
+genra_combined<- rbind(RA_pfoa, RA_pfos) %>%
+  drop_na(similarity) 
+
+pfas_class <- tibble(
+  dsstox_sid = c(
+  "DTXSID40892486",  # PFOA
+  "DTXSID3031864",  # PFOS
+  "DTXSID4059916",  # PFBA
+  "DTXSID6062599",  # PFPeA
+  "DTXSID3031862",  # PFHxA
+  "DTXSID1037303",  # PFHpA
+  "DTXSID8031863",  # PFNA
+  "DTXSID3031860",  # PFDA
+  "DTXSID8047553",  # PFUdA
+  "DTXSID8031861",  # PFDoA
+  "DTXSID90868151",  # PFTrDA
+  "DTXSID3059921",  # PFTeDA
+  "DTXSID60873015",  # PFBS
+  "DTXSID8062600",  # PFPeS
+  "DTXSID7040150",  # PFHxS
+  "DTXSID8059920",  # PFHpS
+  "DTXSID8071356",  # PFNS
+  "DTXSID00873014",  # PFDS
+  "DTXSID30891564",  # 4:2 FTS
+  "DTXSID6067331",  # 6:2 FTS
+  "DTXSID00192353",  # 8:2 FTS
+  "DTXSID10624392",  # N-MeFOSAA
+  "DTXSID60892504",  # N-EtFOSAA
+  "DTXSID3038939",   # FOSA
+  "DTXSID2060032", #DONA
+  "DTXSID70880215" #Genx
+  ),
+PFAS_list = c(
+"PFOA",
+"PFOS",
+"PFBA",
+"PFPeA",
+"PFHxA",
+"PFHpA",
+"PFNA",
+"PFDA",
+"PFUdA",
+"PFDoA",
+"PFTrDA",
+"PFTeDA",
+"PFBS",
+"PFPeS",
+"PFHxS",
+"PFHpS",
+"PFNS",
+"PFDS",
+"f4_2FTS",
+"f6_2FTS",
+"f8_2FTS",
+"N_MeFOSAA",
+"N_EtFOSAA",
+"FOSA",
+"DONA",
+"HFPO-DA")
+)
+# Subset your main data
+genra_subset <- genra_combined %>%
+  left_join(pfas_class, by = "dsstox_sid") %>%
+  filter(!is.na(PFAS_list))  
+
+
+assign_group <- function(x) {
+  # PFCAs 
+  if(x %in% c("PFBA","PFPeA","PFHxA","PFHpA","PFOA","PFNA","PFDA", "PFUdA","PFDoA","PFTrDA","PFTeDA")) return("PFCAs")
+
+  # PFSAs 
+  else if(x %in% c("PFBS","PFPeS","PFHxS","PFHpS","PFOS", "PFNS","PFDS")) return("PFSAs")
+
+  # N_2_FTS
+  else if(x %in% c("f6_2FTS","f4_2FTS", "f8_2FTS")) return("FTS")
+  
+  # FOSAs
+  else if(x %in% c("N_MeFOSAA","N_EtFOSAA","FOSA")) return("FOSAs")
+  
+  # Genx
+  else if(x %in% c("DONA","HFPO-DA")) return("Genx")
+  else return(NA)
+}
+genra_subset$group <- sapply(genra_subset$PFAS_list, assign_group)
+
+compound_order <- c("PFCAs", "PFSAs", "FOSAs","FTS", "Genx")
+genra_subset$group <- factor(genra_subset$group, levels = compound_order)
+custom_colors_named <- c(
+  "PFOS"   = "#f2844b",
+  "PFOA"   = "#6a00a8")
+subset<-  ggplot() +
+  geom_point(data = genra_subset,
+             aes(x = fct_reorder(PFAS_list, similarity, .desc = TRUE), y = similarity, color = Chemical), size = 4, alpha = 0.5, width = 0.1, stroke = 1) +
+  facet_grid(~ group, scales = "free_x", space = "free_x")+
+  labs(
+    title = NULL,
+    x = NULL,
+    y = "Similarity"
+  ) +
+    geom_hline(yintercept = 0.4, linetype = "dashed", color = "#f2844b", linewidth =0.8) +
+  geom_hline(yintercept = 0.333, linetype = "dashed", color = "#6a00a8", linewidth =0.8) +
+  ylim(0, 1) +
+   scale_color_manual(
+    name = "Chemical",
+    values = custom_colors_named
+  ) +
+  scale_fill_manual(
+    name = "Chemical",
+    values = custom_colors_named
+  ) +
+  scale_shape_manual(
+    name = "Sex",
+    values = shape_map
+  ) +
+
+   theme_minimal() +
+  theme(
+      text = element_text(family = "Arial", size = 12),
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.position = "right",
+      panel.grid.major = element_line(size = 0.5),
+      panel.grid.minor = element_blank())
+print(subset)
+ggsave(filename = "../plots/23pfas.png", plot = subset, width = 9, height = 3, dpi = 300,bg = "white")
+
+
+```
+
+#TSNE
+## PFOA TSNE
+```{r}
+#Subset Genra
+genra_combined_pfoa <- genra_combined %>%
+  filter(
+    Chemical == "PFOA"
+  )               
+
+set.seed(123)  # reproducibility
+
+sim <- genra_combined_pfoa$similarity
+#make small things more similar
+dist_matrix <- as.dist(1 - sim)
+tsne_out_pfos <- Rtsne(dist_matrix, dims = 2, perplexity = 100, verbose = TRUE)
+
+tsne_df_pfoa <- genra_combined_pfoa %>%
+  mutate(tSNE1 = tsne_out_pfos$Y[,1],
+         tSNE2 = tsne_out_pfos$Y[,2])
+
+
+tsnepfoa <- ggplot(tsne_df_pfoa, aes(x = tSNE1, y = tSNE2, label = dsstox_sid, color = similarity)) +
+  geom_point(alpha = 0.8, size = 4) +
+  scale_color_viridis(option = "plasma", direction = -1) +
+  theme_minimal() +
+  theme(
+      text = element_text(family = "Arial", size = 12),
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.position = "right",
+      panel.grid.major = element_line(size = 0.5),
+      panel.grid.minor = element_blank())
+print(tsnepfoa)
+ggsave(filename = "../plots/pfoa_tsne.png", plot = tsnepfoa, width = 7, height = 5, dpi = 300,bg = "white")
+```
+
+
+##PFOS TSNE
+```{r}
+genra_combined_pfos <- genra_combined %>%
+  filter(
+    Chemical == "PFOS"
+  )
+
+set.seed(123)  # reproducibility
+
+sim <- genra_combined_pfos$similarity
+#make small things more similar
+dist_matrix <- as.dist(1 - sim)
+tsne_out_pfos <- Rtsne(dist_matrix, dims = 2, perplexity = 100, verbose = TRUE)
+
+tsne_df_pfos <- genra_combined_pfos %>%
+  mutate(tSNE1 = tsne_out_pfos$Y[,1],
+         tSNE2 = tsne_out_pfos$Y[,2])
+
+
+tsnepfos <- ggplot(tsne_df_pfos, aes(x = tSNE1, y = tSNE2, label = dsstox_sid, color = similarity)) +
+  geom_point(alpha = 0.8, size = 4) +
+  scale_color_viridis(option = "plasma", direction = -1) +
+  theme_minimal() +
+  theme(
+      text = element_text(family = "Arial", size = 12),
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.position = "right",
+      panel.grid.major = element_line(size = 0.5),
+      panel.grid.minor = element_blank())
+print(tsnepfos)
+ggsave(filename = "../plots/pfos_tsne.png", plot = tsnepfos, width = 7, height = 5, dpi = 300,bg = "white")
+```
+
+
+
